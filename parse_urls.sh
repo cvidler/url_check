@@ -73,13 +73,13 @@ set -x
 	echo "Raw Matches: Count, Line#, RawURL" >> $OUTFILE
 	# perl-ify regex
 	# DC RUM regex syntax is not-strictly enforced, perl requires strict syntax, so we'll fix what we can (typically we have to escape '/' forward-slash characters).
-	perlregex=${regex//\//\\/}
+	perlregex=^${regex//\//\\/}.*$
 	echo $perlregex
 	#cat $INFILE | gawk -v regexvar="$regex" ' $0 ~ regexvar { i++; printf("%i,%i,%s\n", i,NR,$1) } ' >> $OUTFILE
 	cat $INFILE | perl -ne'++$l && /'$perlregex'/ && ++$i && print "$i,$l,$&\n" ' >> $OUTFILE
-	echo "AMD Output: Count, ReportedURL" >> $OUTFILE
+	echo "AMD Output: Count, Hits, ReportedURL" >> $OUTFILE
 	#cat $INFILE | gawk -v regexvar="$regex" ' $0 ~ regexvar { res = gensub(regexvar, "boo \\1:\\2:\\3:\\4:", "g", $0); !a[res]++; i++; printf("%i,%s\n", i, res ); } ' >> $OUTFILE
-	cat $INFILE | perl -ne's/'$perlregex'/\1\2\3\4\5\6\7\8\9/ && ++$i && print "$i,$1$2$3$4$5$6$7$8$9\n"' >> $OUTFILE
+	cat $INFILE | perl -ne's/'$perlregex'/\1\2\3\4\5\6\7\8\9/ && print "$1$2$3$4$5$6$7$8$9\n"' | perl -ne'{chop; $u{$_}++} END { print ++$i.",".$u{$_}.",".$_."\n" for keys %u} ' >> $OUTFILE
 
 
 	echo "" >> $OUTFILE
