@@ -68,21 +68,23 @@ tmpfile2=`mktemp`
 cp $INFILE $tmpfile
 
 # parse regexinput file.
+regexcount=0
 cat $REGEXFILE | while read -r regex; do
 
-	echo "Testing URL Definition: $regex"
-	echo "Testing URL Definition: $regex" >> $OUTFILE
+	regexcount=$((regexcount + 1))
+	echo "${regexcount}: Testing URL Definition: $regex"
+	echo "${regexcount}: Testing URL Definition: $regex" >> $OUTFILE
 
 #extra debug, shows all command lines run
 #set -x
 
-	echo "Raw Matches: Count, Line#, RawURL" >> $OUTFILE
+	echo "${regexcount}: Raw Matches: Count, Line#, RawURL" >> $OUTFILE
 	# perl-ify regex
 	# DC RUM regex syntax is not-strictly enforced, perl requires strict syntax, so we'll fix what we can (typically we have to escape '/' forward-slash characters), and add a full string match so we can report them properly.
 	perlregex=^${regex//\//\\/}.*$
 	#echo $perlregex
 	perl -ne'++$l && /'$perlregex'/ && ++$i && print "$i,$l,$&\n" ' $INFILE >> $OUTFILE
-	echo "AMD Output: Count, Hits, ReportedURL" >> $OUTFILE
+	echo "${regexcount}: AMD Output: Count, Hits, ReportedURL" >> $OUTFILE
 	perl -ne's/'$perlregex'/\1\2\3\4\5\6\7\8\9/ && print "$1$2$3$4$5$6$7$8$9\n"' $INFILE | perl -ne'{chop; $u{$_}++} END { print ++$i.",".$u{$_}.",".$_."\n" for keys %u} ' >> $OUTFILE
 
 #set -x
@@ -98,7 +100,8 @@ cat $REGEXFILE | while read -r regex; do
 
 done 
 
-echo "Non-Matching Lines: Count, RawURL" >> $OUTFILE
+echo "0: All Regexs parsed." >> $OUTFILE
+echo "0: Non-Matching Lines: Count, RawURL" >> $OUTFILE
 perl -ne'!/^[#\s]/ &&  print ++$i.",".$_ ' $tmpfile >> $OUTFILE
 rm -f $tmpfile
 rm -f $tmpfile2
